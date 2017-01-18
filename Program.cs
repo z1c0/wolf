@@ -6,13 +6,10 @@ namespace Wolf
   {
     public static void Main(string[] args)
     {      
-      Console.WriteLine(@"wolf");
       Console.WriteLine();
-      Console.WriteLine(@" ^_^ ");
+      Console.WriteLine(@" ^_^  wolf");
       Console.WriteLine(@"(` ´)");
-      Console.WriteLine(@" \°/ ");
-      Console.WriteLine();
-      Console.WriteLine(@"Markdown to static blog post generator");
+      Console.WriteLine(@" \°/  markdown to static blog post generator");
       Console.WriteLine();
 
       var config = new Config

@@ -22,26 +22,33 @@ namespace Wolf
 
     internal void Run()
     {
-      try
+      if (!Directory.Exists(_config.InputDirectory))
       {
-        var dirs = Directory.GetDirectories(_config.InputDirectory).Select(d => new DirectoryInfo(d));
-        foreach (DirectoryInfo d in dirs)
-        {
-          var mdFile = GetMarkdownFileName(d);
-          if (mdFile == null)
-          {
-            Log.Error($"No Markdown (.md) document found in directory '{d.FullName}'");
-          }
-          else
-          {
-            Convert(mdFile);
-          }
-        }
-        _index.Save();
+        Log.Error($"Input directory '{_config.InputDirectory}' does not exist");
       }
-      catch (Exception e)
+      else
       {
-        Console.WriteLine(e);
+        try
+        {
+          var dirs = Directory.GetDirectories(_config.InputDirectory).Select(d => new DirectoryInfo(d));
+          foreach (DirectoryInfo d in dirs)
+          {
+            var mdFile = GetMarkdownFileName(d);
+            if (mdFile == null)
+            {
+              Log.Error($"No Markdown (.md) document found in directory '{d.FullName}'");
+            }
+            else
+            {
+              Convert(mdFile);
+            }
+          }
+          _index.Save();
+        }
+        catch (Exception e)
+        {
+          Log.Error(e.ToString());
+        }
       }
     }
 
