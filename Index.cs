@@ -65,7 +65,10 @@ namespace Wolf
         ContractResolver = new CamelCasePropertyNamesContractResolver() 
       };
       File.WriteAllText(PostsFileName, JsonConvert.SerializeObject(_posts, Formatting.Indented, settings));
-      File.WriteAllText(TagsFileName, JsonConvert.SerializeObject(_tags, Formatting.Indented, settings));
+      if (_config.GenerateTagsFile)
+      {
+        File.WriteAllText(TagsFileName, JsonConvert.SerializeObject(_tags, Formatting.Indented, settings));
+      }
     }
 
     private string PostsFileName => Path.Combine(_config.IndexDirectory, "posts.json");
