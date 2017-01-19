@@ -78,23 +78,23 @@ namespace Wolf
       {
         var pipeline = new MarkdownPipelineBuilder().UseYamlFrontMatter().Build();
         var doc = Markdown.Parse(reader.ReadToEnd(), pipeline);
-        var yaml = doc.Descendants().OfType<YamlFrontMatterBlock>().FirstOrDefault();
-        if (yaml != null)
-        {
-          _index.Add(name, yaml.Lines.Lines.Select(l => l.ToString()));
-        }
         // Actual HTML conversion now?
         var htmlFile = Path.ChangeExtension(Path.Combine(htmlDir, name), "html");
-        if (_config.ForceGeneration || !File.Exists(htmlFile))
+        var featuredImage = string.Empty;
+        Log.Info($"Processing '{htmlFile}'");
+        foreach (var l in doc.Descendants().OfType<LinkInline>().Where(l => l.IsImage))
         {
-          Log.Info($"Processing '{htmlFile}'");
-          foreach (var l in doc.Descendants().OfType<LinkInline>())
+          var img = new FileInfo(Path.Combine(mdFile.DirectoryName, l.Url));
+          if (img.Exists)
           {
-            var img = new FileInfo(Path.Combine(mdFile.DirectoryName, l.Url));
-            if (img.Exists)
+            if (_config.InputDirectory != _config.OutputDirectory)
             {
               img.CopyTo(Path.Combine(htmlDir, l.Url), true);
-              l.Url = _config.ImagePrefix + name + '/' + l.Url;
+            }
+            l.Url = _config.ImagePrefix + name + '/' + l.Url;
+            if (string.IsNullOrEmpty(featuredImage))
+            {
+              featuredImage = l.Url;
             }
           }
           using (var writer = new StreamWriter(new FileStream(htmlFile, FileMode.Create)))
@@ -105,6 +105,8 @@ namespace Wolf
             writer.Flush();
           }
         }
+        var yaml = doc.Descendants().OfType<YamlFrontMatterBlock>().FirstOrDefault();
+        _index.Add(name, featuredImage, yaml?.Lines.Lines.Select(l => l.ToString()));
       }
     }
   }
