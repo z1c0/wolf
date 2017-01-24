@@ -36,7 +36,7 @@ namespace Wolf
             var mdFile = GetMarkdownFileName(d);
             if (mdFile == null)
             {
-              Log.Error($"No Markdown (.md) document found in directory '{d.FullName}'");
+              Log.Warning($"No Markdown (.md) document found in directory '{d.FullName}'");
             }
             else
             {

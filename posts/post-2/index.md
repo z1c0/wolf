@@ -1,6 +1,6 @@
 ---
 Title: This is the second post
-Published: 12/1/2017
+Published: 2017-01-11
 Tags: blog musing fun
 ---
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -41,7 +42,7 @@ namespace Wolf
                 break;
 
               case "published":
-                post.Published = DateTime.Parse(value);
+                post.Published = DateTime.Parse(value, CultureInfo.InvariantCulture);
                 break;
 
               case "image":

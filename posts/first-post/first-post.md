@@ -1,6 +1,6 @@
 ---
 Title: The First Post
-Published: 10/1/2017
+Published: 2017-01-20
 Tags: Introduction Blog 
 ---
 

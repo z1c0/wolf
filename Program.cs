@@ -16,7 +16,6 @@ namespace Wolf
         Name = "wolf",
         Description = "markdown to static blog post generator"
       };
-      //app.Command("catapult", cfg => {});
       var input = app.Option(
         "-i | --inputDirectory <directory>",
         "Input directory of blog posts",
