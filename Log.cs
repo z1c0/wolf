@@ -17,7 +17,7 @@ namespace Wolf
     {
       var color = Console.ForegroundColor;
       Console.ForegroundColor = ConsoleColor.Yellow;
-      Console.Write("ERROR: ");
+      Console.Write("WARNING: ");
       Console.WriteLine(msg);
       Console.ForegroundColor = color;
     }
