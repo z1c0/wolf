@@ -97,13 +97,13 @@ namespace Wolf
               featuredImage = l.Url;
             }
           }
-          using (var writer = new StreamWriter(new FileStream(htmlFile, FileMode.Create)))
-          {
+        }
+        using (var writer = new StreamWriter(new FileStream(htmlFile, FileMode.Create)))
+        {
             var renderer = new HtmlRenderer(writer);
             pipeline.Setup(renderer);
             renderer.Render(doc);
             writer.Flush();
-          }
         }
         var yaml = doc.Descendants().OfType<YamlFrontMatterBlock>().FirstOrDefault();
         _index.Add(name, featuredImage, yaml?.Lines.Lines.Select(l => l.ToString()));
