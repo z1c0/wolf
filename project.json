@@ -1,9 +1,11 @@
 {
-  "version": "0.9.0-*",
+  "version": "0.9.1-*",
   "authors": [
     "Wolfgang Ziegler"
   ],
-  "projectUrl": "https://github.com/z1c0/wolf",
+  "packOptions": {
+    "projectUrl": "https://github.com/z1c0/wolf"    
+  },
   "buildOptions": {
     "debugType": "portable",
     "emitEntryPoint": true

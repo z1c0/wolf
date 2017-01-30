@@ -37,7 +37,7 @@ Options:
   -p | --imagePrefix <prefix>         Prefix added to image paths.
   -t | --tagFile                      Generate 'tags.json' file.
   -v | --verbose                      Show detailed output.
-  -n | --nologo                            Do not display logo.
+  -n | --nologo                       Do not display logo.
   -? | -h | --help                    Show help information
 ```
 
@@ -66,8 +66,10 @@ as a  **posts.json** file containing the metadata for all blog posts.
       "Orchard",
       "Markdown"
     ]
+  },
+  {
+    . . .
   }
-  ...
 ]
 ```
 
@@ -95,7 +97,37 @@ public class PostRepositoryLoader
 
 ## Usage (API)
 
-... to come
+The *wolf* API provides basically the same functionality as the CLI version.
+Create an instance of `Wolf.Convert` and provide a `Wolf.Config` object as its
+argument.
+
+The `Config` object is mandatory since you should at least decide whether errors
+(e.g. incorrect / non-existent directory) should throw exceptions are not. By default
+they do not.
+
+```csharp
+var converter = new Wolf.Converter(new Wolf.Config
+{
+  ThrowOnError = true,
+});
+```
+
+Then simple start the conversion by calling the `Run` method.
+
+```csharp
+converter.Run();
+```
+
+The `Run` method returns a `Wolf.Result` object that provides further
+information about the conversion operation.
+
+```csharp
+var result = converter.Run();
+// Then use ...
+result.Errors;
+result.Warnings;
+result.Information;
+```
 
 ## NuGet
 

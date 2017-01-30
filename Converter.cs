@@ -9,22 +9,24 @@ using Markdig.Syntax.Inlines;
 
 namespace Wolf
 {
-  internal class Converter
+  public class Converter
   {
     private Config _config;
     private Index _index;
+    private Log _log;
 
-    internal Converter(Config config)
+    public Converter(Config config)
     {
       _config = config;
-      _index = new Index(config);
+      _log = new Log(_config);
+      _index = new Index(_log, _config);
     }
 
-    internal void Run()
+    public Result Run()
     {
       if (!Directory.Exists(_config.InputDirectory))
       {
-        Log.Error($"Input directory '{_config.InputDirectory}' does not exist");
+        _log.Error($"Input directory '{_config.InputDirectory}' does not exist");
       }
       else
       {
@@ -36,7 +38,7 @@ namespace Wolf
             var mdFile = GetMarkdownFileName(d);
             if (mdFile == null)
             {
-              Log.Warning($"No Markdown (.md) document found in directory '{d.FullName}'");
+              _log.Warning($"No Markdown (.md) document found in directory '{d.FullName}'");
             }
             else
             {
@@ -47,9 +49,14 @@ namespace Wolf
         }
         catch (Exception e)
         {
-          Log.Error(e.ToString());
+          _log.Error(e.ToString());
         }
       }
+      return new Result(
+        _log.GetMessagesOfType(LogType.Error),
+        _log.GetMessagesOfType(LogType.Warning),
+        _log.GetMessagesOfType(LogType.Info)
+      );
     }
 
     private static FileInfo GetMarkdownFileName(DirectoryInfo dir)
@@ -81,7 +88,7 @@ namespace Wolf
         // Actual HTML conversion now?
         var htmlFile = Path.ChangeExtension(Path.Combine(htmlDir, name), "html");
         var featuredImage = string.Empty;
-        Log.Info($"Processing '{htmlFile}'");
+        _log.Info($"Processing '{htmlFile}'");
         foreach (var l in doc.Descendants().OfType<LinkInline>().Where(l => l.IsImage))
         {
           var img = new FileInfo(Path.Combine(mdFile.DirectoryName, l.Url));

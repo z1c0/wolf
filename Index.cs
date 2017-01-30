@@ -9,12 +9,14 @@ namespace Wolf
 {
   internal class Index
   {
+    private Log _log;
     private Config _config;
     private List<string> _tags = new List<string>();
     private List<Post> _posts = new List<Post>();
 
-    internal Index(Config config)
+    internal Index(Log log, Config config)
     {
+      _log = log;
       _config = config;
     }
     
@@ -62,7 +64,7 @@ namespace Wolf
                 break;
 
               default:
-                Log.Warning($"Unrecognized YAML header '{l}' in '{slug}'");
+                _log.Warning($"Unrecognized YAML header '{l}' in '{slug}'");
                 break;
             }
           }
