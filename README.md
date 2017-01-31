@@ -1,5 +1,8 @@
 # wolf
 
+[![Build status](https://ci.appveyor.com/api/projects/status/gsn9ig1v1mccg976?svg=true)](https://ci.appveyor.com/project/z1c0/wolf)
+[![NuGet](https://img.shields.io/nuget/v/wolf.svg)](https://www.nuget.org/packages/wolf/)
+
 ```
 /\_/\  wolf
 |` ´|
@@ -131,7 +134,9 @@ result.Information;
 
 ## NuGet
 
-... to come
+[![NuGet](https://img.shields.io/nuget/v/wolf.svg)](https://www.nuget.org/packages/wolf/)
+
+[https://www.nuget.org/packages/wolf](https://www.nuget.org/packages/wolf/)
 
 ## Dependencies
 
