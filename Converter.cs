@@ -45,7 +45,10 @@ namespace Wolf
               Convert(mdFile);
             }
           }
-          _index.Save();
+          if (_config.GenerateIndex)
+          {
+            _index.Save();
+          }
         }
         catch (Exception e)
         {

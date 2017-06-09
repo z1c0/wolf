@@ -24,6 +24,10 @@ namespace Wolf
         "-o | --outputDirectory <directory>",
         "Output directory of blog posts",
         CommandOptionType.SingleValue);
+      var noIndex = app.Option(
+        "-nx | --noIndex",
+        "Do not generate index (posts.json)",
+        CommandOptionType.NoValue);
       var index = app.Option(
         "-x | --indexDirectory <directory>",
         "Directory where index (posts.json) file is written",
@@ -51,6 +55,7 @@ namespace Wolf
         config.OutputDirectory = output.HasValue() ? output.Value() : config.InputDirectory;
         config.IndexDirectory = index.HasValue() ? index.Value() : config.OutputDirectory;
         config.ImagePrefix = prefix.HasValue() ? prefix.Value() : "/" + config.OutputDirectory + "/";
+        config.GenerateIndex = !noIndex.HasValue();
         config.GenerateTagsFile = tags.HasValue();
         config.Verbose = verbose.HasValue();
         showLogo = !logo.HasValue();
@@ -68,11 +73,12 @@ namespace Wolf
         }
         if (config.Verbose)
         {
-          Console.WriteLine("input directory     : " + config.InputDirectory);
-          Console.WriteLine("output directory    : " + config.OutputDirectory);
-          Console.WriteLine("index directory     : " + config.IndexDirectory);
-          Console.WriteLine("image prefix        : " + config.ImagePrefix);
-          Console.WriteLine("generate 'tags.json': " + config.GenerateTagsFile);
+          Console.WriteLine("input directory      : " + config.InputDirectory);
+          Console.WriteLine("output directory     : " + config.OutputDirectory);
+          Console.WriteLine("index directory      : " + config.IndexDirectory);
+          Console.WriteLine("image prefix         : " + config.ImagePrefix);
+          Console.WriteLine("generate 'posts.json': " + config.GenerateIndex);
+          Console.WriteLine("generate 'tags.json' : " + config.GenerateTagsFile);
         }
         var converter = new Converter(config);
         converter.Run();

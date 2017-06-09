@@ -2,6 +2,7 @@ namespace Wolf
 {
   public class Config
   {
+    public bool GenerateIndex { get; set; }
     public bool GenerateTagsFile { get; set; }
     public string InputDirectory { get; set; }
     public string OutputDirectory { get; set; }
