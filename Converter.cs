@@ -86,7 +86,7 @@ namespace Wolf
       }
       using (var reader = mdFile.OpenText())
       {
-        var pipeline = new MarkdownPipelineBuilder().UseYamlFrontMatter().Build();
+        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().UseYamlFrontMatter().Build();
         var doc = Markdown.Parse(reader.ReadToEnd(), pipeline);
         // Actual HTML conversion now?
         var htmlFile = Path.ChangeExtension(Path.Combine(htmlDir, name), "html");
