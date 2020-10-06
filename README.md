@@ -105,7 +105,7 @@ Create an instance of `Wolf.Convert` and provide a `Wolf.Config` object as its
 argument.
 
 The `Config` object is mandatory since you should at least decide whether errors
-(e.g. incorrect / non-existent directory) should throw exceptions are not. By default
+(e.g. an incorrect or non-existent directory path) should throw exceptions are not. By default
 they do not.
 
 ```csharp
@@ -115,7 +115,7 @@ var converter = new Wolf.Converter(new Wolf.Config
 });
 ```
 
-Then simple start the conversion by calling the `Run` method.
+Then simply start the conversion by calling the `Run` method.
 
 ```csharp
 converter.Run();
