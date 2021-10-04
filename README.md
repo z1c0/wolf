@@ -52,8 +52,8 @@ This is *after* the *wolf* conversion.
 
 ![post directory after the "wolf conversion"](posts/first-post/after-wolf.png)
 
-As we can see, we now have an additional *.html* file per blog post as well
-as a  **posts.json** file containing the metadata for all blog posts.
+As we can see, we now have an additional `.html` file per blog post as well
+as a `posts.json` file containing the metadata for all blog posts.
 
 ```json
 [
