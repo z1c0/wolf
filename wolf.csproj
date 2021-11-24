@@ -3,7 +3,7 @@
   <PropertyGroup>
     <VersionPrefix>0.9.1-beta</VersionPrefix>
     <Authors>Wolfgang Ziegler</Authors>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <DebugType>portable</DebugType>
     <AssemblyName>wolf</AssemblyName>
     <OutputType>Exe</OutputType>
