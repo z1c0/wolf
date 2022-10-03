@@ -8,7 +8,7 @@ nuget:
   disable_publish_on_pr: true
 build_script:  
 - ps: .\Build.ps1
-test: off  
+test: false
 artifacts:  
 - path: .\artifacts\**\*.nupkg
   name: NuGet
@@ -16,6 +16,6 @@ deploy:
 - provider: NuGet
   name: production
   api_key:
-    secure: T6LyujLG0YOgVbKDM2iHiDKRFqfhKRgBv3C7hBBX1jfNU6hsh/+giz/62B4uomE7
+    secure: /JTSqQ0h6C+JY5+gZGSkx6BoZB0kjwTrSrvpjKQ72tKFhsKdRbQahj9fw4zy/vEE
   on:
     branch: master
