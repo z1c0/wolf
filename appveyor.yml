@@ -6,12 +6,6 @@ branches:
   - main
 nuget:  
   disable_publish_on_pr: true
-build_script:  
-- ps: .\Build.ps1
-test: false
-artifacts:  
-- path: .\artifacts\**\*.nupkg
-  name: NuGet
 deploy:  
 - provider: NuGet
   name: production

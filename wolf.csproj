@@ -4,6 +4,7 @@
     <VersionPrefix>1.0.1</VersionPrefix>
     <Authors>Wolfgang Ziegler</Authors>
     <TargetFramework>net6.0</TargetFramework>
+    <IsPackable>true</IsPackable>
     <DebugType>portable</DebugType>
     <AssemblyName>wolf</AssemblyName>
     <OutputType>Exe</OutputType>
