@@ -34,27 +34,31 @@ namespace Wolf
         throw new InvalidOperationException(msg);
       }
       _messages.Add(Tuple.Create(LogType.Error, msg));
-      var color = Console.ForegroundColor;
-      Console.ForegroundColor = ConsoleColor.Red;
-      Console.Write("ERROR: ");
-      Console.WriteLine(msg);
-      Console.ForegroundColor = color;
+      PrintToConsole("ERROR: ", msg, ConsoleColor.Red);
     }
 
     internal void Warning(string msg)
     {
       _messages.Add(Tuple.Create(LogType.Warning, msg));
-      var color = Console.ForegroundColor;
-      Console.ForegroundColor = ConsoleColor.Yellow;
-      Console.Write("WARNING: ");
-      Console.WriteLine(msg);
-      Console.ForegroundColor = color;
+      PrintToConsole("WARNING: ", msg, ConsoleColor.Yellow);
     }
 
     internal void Info(string msg)
     {
       _messages.Add(Tuple.Create(LogType.Info, msg));
+      PrintToConsole(null, msg, ConsoleColor.Cyan);
+    }
+
+    private static void PrintToConsole(string prefix, string msg, ConsoleColor color)
+    {
+      var saveColor = Console.ForegroundColor;
+      Console.ForegroundColor = color;
+      if (!string.IsNullOrEmpty(prefix))
+      {
+        Console.Write(prefix);
+      }
       Console.WriteLine(msg);
+      Console.ForegroundColor = saveColor;
     }
   }
 }

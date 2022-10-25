@@ -1,7 +1,7 @@
 ---
 Title: The last example post
 Published: 2017-01-24
-Tags: blog fun
+Tags: blog fun foo
 Image: pic0.png
 ---
 

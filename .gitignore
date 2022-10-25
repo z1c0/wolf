@@ -268,4 +268,6 @@ __pycache__/
 # tools/
 
 posts/posts.json
+posts/tags.json
 posts/*/*.html
+.vscode

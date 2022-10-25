@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -11,8 +12,8 @@ namespace Wolf
   {
     private Log _log;
     private Config _config;
-    private List<string> _tags = new List<string>();
-    private List<Post> _posts = new List<Post>();
+    private readonly List<string> _tags = new();
+    private readonly List<Post> _posts = new();
 
     internal Index(Log log, Config config)
     {
@@ -81,8 +82,27 @@ namespace Wolf
         ContractResolver = new CamelCasePropertyNamesContractResolver() 
       };
       File.WriteAllText(PostsFileName, JsonConvert.SerializeObject(_posts, Formatting.Indented, settings));
+
       if (_config.GenerateTagsFile)
       {
+        // Report newly introduced tags in verbose mode.
+        if (_config.Verbose)
+        {
+          if (File.Exists(TagsFileName))
+          {
+            var oldTags = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(TagsFileName));
+            var newTags = _tags.Except(oldTags);
+            if (newTags.Any())
+            {
+              _log.Info("New tags were encountered:");
+              foreach (var t in newTags)
+              {
+                _log.Info($"- {t}");
+              }
+            }
+          }
+        }
+        _tags.Sort();
         File.WriteAllText(TagsFileName, JsonConvert.SerializeObject(_tags, Formatting.Indented, settings));
       }
     }
