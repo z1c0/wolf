@@ -1,0 +1,10 @@
+<p>This post contains source code:</p>
+<pre><code class="language-csharp">internal static void Error(string msg)
+{
+  var color = Console.ForegroundColor;
+  Console.ForegroundColor = ConsoleColor.Red;
+  Console.Write(&quot;ERROR: &quot;);
+  Console.WriteLine(msg);
+  Console.ForegroundColor = color;
+}
+</code></pre>

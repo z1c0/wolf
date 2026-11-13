@@ -16,6 +16,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wolf.Tests\**" />
+    <EmbeddedResource Remove="wolf.Tests\**" />
+    <None Remove="wolf.Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="wolf.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Markdig" Version="1.6.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="System.CommandLine" Version="3.0.0" />

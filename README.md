@@ -148,3 +148,16 @@ result.Information;
 
 **wolf** uses [Markdig](https://github.com/lunet-io/markdig) for the actual
 *Markdown* to *HTML* conversion.
+
+## Development
+
+```
+dotnet test --solution wolf.sln
+```
+
+The tests in `wolf.Tests` cover the conversion, the index, image handling and the
+command line. `SamplePostsTests` converts the sample posts in `posts/` and
+compares the result with `wolf.Tests/Expected`, which catches unintended output
+changes (e.g. from a Markdig update). After an intended change, regenerate the
+expected files with `WOLF_UPDATE_EXPECTED=1 dotnet test --solution wolf.sln`
+and review the diff.

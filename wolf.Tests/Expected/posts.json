@@ -1,0 +1,34 @@
+[
+  {
+    "slug": "the-last-post",
+    "title": "The last example post",
+    "published": "2017-01-24T00:00:00",
+    "tags": [
+      "blog",
+      "fun",
+      "foo"
+    ],
+    "featuredImage": "/posts/the-last-post/pic0.png"
+  },
+  {
+    "slug": "first-post",
+    "title": "The First Post",
+    "published": "2017-01-20T00:00:00",
+    "tags": [
+      "Introduction",
+      "Blog"
+    ],
+    "featuredImage": "/posts/first-post/before-wolf.png"
+  },
+  {
+    "slug": "post-2",
+    "title": "This is the second post",
+    "published": "2017-01-11T00:00:00",
+    "tags": [
+      "blog",
+      "musing",
+      "fun"
+    ],
+    "featuredImage": ""
+  }
+]
