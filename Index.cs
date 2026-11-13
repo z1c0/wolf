@@ -1,113 +1,113 @@
-using System;
-using System.Linq;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Wolf
+namespace Wolf;
+
+internal class Index(Log log, Config config)
 {
-  internal class Index
+  private readonly List<string> _tags = [];
+  private readonly List<Post> _posts = [];
+
+  internal Post Add(string slug, string featuredImage, IEnumerable<string>? lines)
   {
-    private Log _log;
-    private Config _config;
-    private readonly List<string> _tags = new();
-    private readonly List<Post> _posts = new();
-
-    internal Index(Log log, Config config)
+    var post = new Post
     {
-      _log = log;
-      _config = config;
-    }
-    
-    internal void Add(string slug, string featuredImage, IEnumerable<string> lines)
+      Slug = slug,
+      Title = slug,
+      FeaturedImage = featuredImage
+    };
+    foreach (var l in lines ?? [])
     {
-      var post = new Post 
-      { 
-        Slug = slug,
-        Title = slug,
-        FeaturedImage = featuredImage
-      };
-      if (lines != null)
+      var i = l.IndexOf(':');
+      if (i < 0)
       {
-        foreach (var l in lines)
+        if (!string.IsNullOrWhiteSpace(l))
         {
-          var i = l.IndexOf(':');
-          if (i >= 0)
+          log.Warning($"Ignored YAML line '{l}' in '{slug}' (only 'key: value' lines are supported)");
+        }
+        continue;
+      }
+      var key = l[..i].Trim().ToLowerInvariant();
+      var value = l[(i + 1)..].Trim();
+      switch (key)
+      {
+        case "title":
+          post.Title = value;
+          break;
+
+        case "published":
+          if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var published))
           {
-            var key = l.Substring(0, i).Trim().ToLower();
-            var value = l.Substring(i + 1).Trim();
-            switch (key)
+            post.Published = published;
+          }
+          else
+          {
+            log.Error($"Invalid 'published' date '{value}' in '{slug}'");
+          }
+          break;
+
+        case "image":
+          post.FeaturedImageFile = value;
+          post.FeaturedImage = config.ImagePrefix + slug + '/' + value;
+          break;
+
+        case "tags":
+        case "categories":
+          post.Tags = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+          if (post.Tags.Length == 0)
+          {
+            log.Warning($"No tags in '{slug}' (tags must be space-separated on the same line)");
+          }
+          foreach (var tag in post.Tags)
+          {
+            if (!_tags.Contains(tag, StringComparer.OrdinalIgnoreCase))
             {
-              case "title":
-                post.Title = value;
-                break;
-
-              case "published":
-                post.Published = DateTime.Parse(value, CultureInfo.InvariantCulture);
-                break;
-
-              case "image":
-                post.FeaturedImage = _config.ImagePrefix + slug + '/' + value;
-                break;
-
-              case "tags":
-              case "categories":
-                post.Tags = value.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var tag in post.Tags)
-                {
-                  if (_tags.Find(t => string.Equals(t, tag, StringComparison.CurrentCultureIgnoreCase)) == null)
-                  {
-                    _tags.Add(tag);
-                  }
-                }
-                break;
-
-              default:
-                _log.Warning($"Unrecognized YAML header '{l}' in '{slug}'");
-                break;
+              _tags.Add(tag);
             }
           }
-        }
-      }
-      _posts.Add(post);
-    }
-    
-    internal void Save()
-    {
-      _posts.Sort();  // Post class implements "IComparable" on the publish date.
-      var settings = new JsonSerializerSettings 
-      { 
-        ContractResolver = new CamelCasePropertyNamesContractResolver() 
-      };
-      File.WriteAllText(PostsFileName, JsonConvert.SerializeObject(_posts, Formatting.Indented, settings));
+          break;
 
-      if (_config.GenerateTagsFile)
-      {
-        // Report newly introduced tags in verbose mode.
-        if (_config.Verbose)
-        {
-          if (File.Exists(TagsFileName))
-          {
-            var oldTags = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(TagsFileName));
-            var newTags = _tags.Except(oldTags);
-            if (newTags.Any())
-            {
-              _log.Info("New tags were encountered:");
-              foreach (var t in newTags)
-              {
-                _log.Info($"- {t}");
-              }
-            }
-          }
-        }
-        _tags.Sort();
-        File.WriteAllText(TagsFileName, JsonConvert.SerializeObject(_tags, Formatting.Indented, settings));
+        default:
+          log.Warning($"Unrecognized YAML header '{l}' in '{slug}'");
+          break;
       }
     }
-
-    private string PostsFileName => Path.Combine(_config.IndexDirectory, "posts.json");
-    private string TagsFileName => Path.Combine(_config.IndexDirectory, "tags.json");
+    _posts.Add(post);
+    return post;
   }
+
+  internal void Save()
+  {
+    _posts.Sort();  // Newest first, see Post.CompareTo.
+    var settings = new JsonSerializerSettings
+    {
+      ContractResolver = new CamelCasePropertyNamesContractResolver()
+    };
+    Directory.CreateDirectory(config.IndexDirectory);
+    File.WriteAllText(PostsFileName, JsonConvert.SerializeObject(_posts, Formatting.Indented, settings));
+
+    if (config.GenerateTagsFile)
+    {
+      // Report newly introduced tags in verbose mode.
+      if (config.Verbose && File.Exists(TagsFileName))
+      {
+        var oldTags = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(TagsFileName)) ?? [];
+        var newTags = _tags.Except(oldTags, StringComparer.OrdinalIgnoreCase).ToList();
+        if (newTags.Count > 0)
+        {
+          log.Info("New tags were encountered:");
+          foreach (var t in newTags)
+          {
+            log.Info($"- {t}");
+          }
+        }
+      }
+      _tags.Sort(StringComparer.OrdinalIgnoreCase);
+      File.WriteAllText(TagsFileName, JsonConvert.SerializeObject(_tags, Formatting.Indented, settings));
+    }
+  }
+
+  private string PostsFileName => Path.Combine(config.IndexDirectory, "posts.json");
+  private string TagsFileName => Path.Combine(config.IndexDirectory, "tags.json");
 }

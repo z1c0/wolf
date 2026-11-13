@@ -1,123 +1,166 @@
-using System;
-using System.IO;
-using System.Linq;
 using Markdig;
 using Markdig.Extensions.Yaml;
 using Markdig.Renderers;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 
-namespace Wolf
+namespace Wolf;
+
+public class Converter
 {
-  public class Converter
+  private static readonly string[] MarkdownNames = ["index", "default", "post"];
+
+  private readonly Config _config;
+  private readonly Index _index;
+  private readonly Log _log;
+  private readonly MarkdownPipeline _pipeline =
+    new MarkdownPipelineBuilder().UseAdvancedExtensions().UseYamlFrontMatter().Build();
+
+  public Converter(Config config)
   {
-    private Config _config;
-    private Index _index;
-    private Log _log;
+    _config = config;
+    _log = new Log(_config);
+    _index = new Index(_log, _config);
+  }
 
-    public Converter(Config config)
+  public Result Run()
+  {
+    if (!Directory.Exists(_config.InputDirectory))
     {
-      _config = config;
-      _log = new Log(_config);
-      _index = new Index(_log, _config);
+      _log.Error($"Input directory '{_config.InputDirectory}' does not exist");
     }
-
-    public Result Run()
+    else
     {
-      if (!Directory.Exists(_config.InputDirectory))
+      var dirs = new DirectoryInfo(_config.InputDirectory)
+        .GetDirectories()
+        .OrderBy(d => d.Name, StringComparer.Ordinal);
+      foreach (var d in dirs)
       {
-        _log.Error($"Input directory '{_config.InputDirectory}' does not exist");
-      }
-      else
-      {
+        var mdFile = GetMarkdownFile(d);
+        if (mdFile == null)
+        {
+          _log.Warning($"No Markdown (.md) document found in directory '{d.FullName}'");
+          continue;
+        }
+        // One broken post must not stop the others from being converted.
         try
         {
-          var dirs = Directory.GetDirectories(_config.InputDirectory).Select(d => new DirectoryInfo(d));
-          foreach (DirectoryInfo d in dirs)
-          {
-            var mdFile = GetMarkdownFileName(d);
-            if (mdFile == null)
-            {
-              _log.Warning($"No Markdown (.md) document found in directory '{d.FullName}'");
-            }
-            else
-            {
-              Convert(mdFile);
-            }
-          }
-          if (_config.GenerateIndex)
-          {
-            _index.Save();
-          }
+          Convert(mdFile);
         }
         catch (Exception e)
         {
-          _log.Error(e.ToString());
+          _log.Error($"Converting '{mdFile.FullName}' failed: {e}");
         }
       }
-      return new Result(
-        _log.GetMessagesOfType(LogType.Error),
-        _log.GetMessagesOfType(LogType.Warning),
-        _log.GetMessagesOfType(LogType.Info)
-      );
-    }
-
-    private static FileInfo GetMarkdownFileName(DirectoryInfo dir)
-    {
-      var names = new[] { dir.Name, "index", "default", "post" };
-      foreach (var n in names)
+      if (_config.GenerateIndex)
       {
-        var fi = new FileInfo(Path.ChangeExtension(Path.Combine(dir.FullName, n), "md"));
-        if (fi.Exists)
+        // A posts.json written after an error would silently drop the
+        // failed post from the site, so keep the previous one instead.
+        if (_log.ErrorCount > 0)
         {
-          return fi;
+          _log.Error("Index (posts.json) not written because of the errors above");
         }
-      }
-      return null;
-    }
-
-    private void Convert(FileInfo mdFile)
-    {
-      var name =  mdFile.Directory.Name;
-      var htmlDir = Path.Combine(_config.OutputDirectory, name);
-      if (!Directory.Exists(htmlDir))
-      {
-        Directory.CreateDirectory(htmlDir);
-      }
-      using (var reader = mdFile.OpenText())
-      {
-        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().UseYamlFrontMatter().Build();
-        var doc = Markdown.Parse(reader.ReadToEnd(), pipeline);
-        // Actual HTML conversion now?
-        var htmlFile = Path.ChangeExtension(Path.Combine(htmlDir, name), "html");
-        var featuredImage = string.Empty;
-        _log.Info($"Processing '{htmlFile}'");
-        foreach (var l in doc.Descendants().OfType<LinkInline>().Where(l => l.IsImage))
+        else
         {
-          var img = new FileInfo(Path.Combine(mdFile.DirectoryName, l.Url));
-          if (img.Exists)
+          try
           {
-            if (_config.InputDirectory != _config.OutputDirectory)
-            {
-              img.CopyTo(Path.Combine(htmlDir, l.Url), true);
-            }
-            l.Url = _config.ImagePrefix + name + '/' + l.Url;
-            if (string.IsNullOrEmpty(featuredImage))
-            {
-              featuredImage = l.Url;
-            }
+            _index.Save();
+          }
+          catch (Exception e)
+          {
+            _log.Error($"Writing the index failed: {e}");
           }
         }
-        using (var writer = new StreamWriter(new FileStream(htmlFile, FileMode.Create)))
-        {
-            var renderer = new HtmlRenderer(writer);
-            pipeline.Setup(renderer);
-            renderer.Render(doc);
-            writer.Flush();
-        }
-        var yaml = doc.Descendants().OfType<YamlFrontMatterBlock>().FirstOrDefault();
-        _index.Add(name, featuredImage, yaml?.Lines.Lines.Select(l => l.ToString()));
       }
     }
+    return new Result(
+      _log.GetMessagesOfType(LogType.Error),
+      _log.GetMessagesOfType(LogType.Warning),
+      _log.GetMessagesOfType(LogType.Info)
+    );
+  }
+
+  private static FileInfo? GetMarkdownFile(DirectoryInfo dir) =>
+    MarkdownNames.Prepend(dir.Name)
+      .Select(n => new FileInfo(Path.Combine(dir.FullName, n + ".md")))
+      .FirstOrDefault(fi => fi.Exists);
+
+  private bool CopiesFiles => !string.Equals(
+    Path.GetFullPath(_config.InputDirectory),
+    Path.GetFullPath(_config.OutputDirectory),
+    StringComparison.Ordinal);
+
+  private void Convert(FileInfo mdFile)
+  {
+    var name = mdFile.Directory!.Name;
+    var htmlDir = Path.Combine(_config.OutputDirectory, name);
+    Directory.CreateDirectory(htmlDir);
+
+    var doc = Markdown.Parse(File.ReadAllText(mdFile.FullName), _pipeline);
+    var htmlFile = Path.Combine(htmlDir, name + ".html");
+    var featuredImage = string.Empty;
+    _log.Info($"Processing '{htmlFile}'");
+    foreach (var l in doc.Descendants().OfType<LinkInline>().Where(l => l.IsImage))
+    {
+      if (!TryResolveLocalFile(mdFile.DirectoryName!, l.Url, out var img))
+      {
+        continue;
+      }
+      CopyToOutput(img, mdFile.DirectoryName!, htmlDir);
+      l.Url = _config.ImagePrefix + name + '/' + l.Url;
+      if (string.IsNullOrEmpty(featuredImage))
+      {
+        featuredImage = l.Url;
+      }
+    }
+    using (var writer = new StreamWriter(htmlFile))
+    {
+      var renderer = new HtmlRenderer(writer);
+      _pipeline.Setup(renderer);
+      renderer.Render(doc);
+    }
+    var yaml = doc.Descendants().OfType<YamlFrontMatterBlock>().FirstOrDefault();
+    var post = _index.Add(name, featuredImage, yaml?.Lines.Lines.Select(l => l.ToString()));
+
+    // An "image:" from the front matter that the post body doesn't show
+    // still has to end up next to the HTML.
+    if (post.FeaturedImageFile is { } featured &&
+        TryResolveLocalFile(mdFile.DirectoryName!, featured, out var featuredFile))
+    {
+      CopyToOutput(featuredFile, mdFile.DirectoryName!, htmlDir);
+    }
+  }
+
+  // Only relative paths to files that exist next to the post count as local
+  // images; absolute URLs ("https://…", "/img/…") are left alone.
+  private static bool TryResolveLocalFile(string postDir, string? url, out FileInfo file)
+  {
+    file = null!;
+    if (string.IsNullOrWhiteSpace(url) ||
+        Uri.TryCreate(url, UriKind.Absolute, out var uri) && !uri.IsFile ||
+        url.StartsWith('/') || url.StartsWith('\\'))
+    {
+      return false;
+    }
+    var candidate = new FileInfo(Path.Combine(postDir, url));
+    if (!candidate.Exists)
+    {
+      // Markdown image paths may be URL-encoded ("my%20pic.png").
+      candidate = new FileInfo(Path.Combine(postDir, Uri.UnescapeDataString(url)));
+    }
+    file = candidate;
+    return candidate.Exists;
+  }
+
+  private void CopyToOutput(FileInfo file, string postDir, string htmlDir)
+  {
+    if (!CopiesFiles)
+    {
+      return;
+    }
+    // Keep the image's path relative to the post, subfolders included.
+    var target = Path.Combine(htmlDir, Path.GetRelativePath(postDir, file.FullName));
+    Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+    file.CopyTo(target, true);
   }
 }

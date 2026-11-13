@@ -1,14 +1,13 @@
-namespace Wolf
+namespace Wolf;
+
+public class Config
 {
-  public class Config
-  {
-    public bool GenerateIndex { get; set; }
-    public bool GenerateTagsFile { get; set; }
-    public string InputDirectory { get; set; }
-    public string OutputDirectory { get; set; }
-    public string IndexDirectory { get; set; }
-    public string ImagePrefix { get; set; }
-    public bool Verbose { get; set; }
-    public bool ThrowOnError { get; set; }
-  }
+  public bool GenerateIndex { get; set; } = true;
+  public bool GenerateTagsFile { get; set; }
+  public required string InputDirectory { get; set; }
+  public required string OutputDirectory { get; set; }
+  public required string IndexDirectory { get; set; }
+  public required string ImagePrefix { get; set; }
+  public bool Verbose { get; set; }
+  public bool ThrowOnError { get; set; }
 }

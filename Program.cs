@@ -1,90 +1,98 @@
-﻿using System;
+using System.CommandLine;
 using System.Text;
-using Microsoft.Extensions.CommandLineUtils;
 
-namespace Wolf
+namespace Wolf;
+
+public static class Program
 {
-  public class Program
+  public static int Main(string[] args)
   {
-    public static void Main(string[] args)
+    Console.OutputEncoding = Encoding.UTF8;
+
+    var input = new Option<string>("--inputDirectory", "-i")
     {
-      Console.OutputEncoding = Encoding.UTF8;
-      var config = new Config();
-      var showLogo = true;
-      var app = new CommandLineApplication(false)
+      Description = "Input directory of blog posts",
+      HelpName = "directory",
+      DefaultValueFactory = _ => "posts",
+    };
+    var output = new Option<string?>("--outputDirectory", "-o")
+    {
+      Description = "Output directory of blog posts (default: input directory)",
+      HelpName = "directory",
+    };
+    var noIndex = new Option<bool>("--noIndex", "-nx")
+    {
+      Description = "Do not generate index (posts.json)",
+    };
+    var index = new Option<string?>("--indexDirectory", "-x")
+    {
+      Description = "Directory where index (posts.json) file is written (default: output directory)",
+      HelpName = "directory",
+    };
+    var prefix = new Option<string?>("--imagePrefix", "-p")
+    {
+      Description = "Prefix added to image paths (default: /<output directory>/)",
+      HelpName = "prefix",
+    };
+    var tags = new Option<bool>("--tagFile", "-t")
+    {
+      Description = "Generate 'tags.json' file",
+    };
+    var verbose = new Option<bool>("--verbose", "-v")
+    {
+      Description = "Show detailed output",
+    };
+    var noLogo = new Option<bool>("--nologo", "-n")
+    {
+      Description = "Do not display logo",
+    };
+
+    var root = new RootCommand("markdown to static blog post generator")
+    {
+      input, output, noIndex, index, prefix, tags, verbose, noLogo,
+    };
+    root.SetAction(parseResult =>
+    {
+      var inputDirectory = parseResult.GetValue(input)!;
+      var outputDirectory = parseResult.GetValue(output) ?? inputDirectory;
+      var config = new Config
       {
-        Name = "wolf",
-        Description = "markdown to static blog post generator"
+        InputDirectory = inputDirectory,
+        OutputDirectory = outputDirectory,
+        IndexDirectory = parseResult.GetValue(index) ?? outputDirectory,
+        ImagePrefix = parseResult.GetValue(prefix) ?? "/" + outputDirectory + "/",
+        GenerateIndex = !parseResult.GetValue(noIndex),
+        GenerateTagsFile = parseResult.GetValue(tags),
+        Verbose = parseResult.GetValue(verbose),
       };
-      var input = app.Option(
-        "-i | --inputDirectory <directory>",
-        "Input directory of blog posts",
-        CommandOptionType.SingleValue);
-      var output = app.Option(
-        "-o | --outputDirectory <directory>",
-        "Output directory of blog posts",
-        CommandOptionType.SingleValue);
-      var noIndex = app.Option(
-        "-nx | --noIndex",
-        "Do not generate index (posts.json)",
-        CommandOptionType.NoValue);
-      var index = app.Option(
-        "-x | --indexDirectory <directory>",
-        "Directory where index (posts.json) file is written",
-        CommandOptionType.SingleValue);
-      var prefix = app.Option(
-        "-p | --imagePrefix <prefix>",
-        "Prefix added to image paths.",
-        CommandOptionType.SingleValue);
-      var tags = app.Option(
-        "-t | --tagFile",
-        "Generate 'tags.json' file.",
-        CommandOptionType.NoValue);
-      var verbose = app.Option(
-        "-v | --verbose",
-        "Show detailed output.",
-        CommandOptionType.NoValue);
-      var logo = app.Option(
-        "-n | --nologo",
-        "Do not display logo.",
-        CommandOptionType.NoValue);
-      app.HelpOption("-? | -h | --help");
-      app.OnExecute(() =>
-      {
-        config.InputDirectory = input.HasValue() ? input.Value() : "posts";
-        config.OutputDirectory = output.HasValue() ? output.Value() : config.InputDirectory;
-        config.IndexDirectory = index.HasValue() ? index.Value() : config.OutputDirectory;
-        config.ImagePrefix = prefix.HasValue() ? prefix.Value() : "/" + config.OutputDirectory + "/";
-        config.GenerateIndex = !noIndex.HasValue();
-        config.GenerateTagsFile = tags.HasValue();
-        config.Verbose = verbose.HasValue();
-        showLogo = !logo.HasValue();
-        return 1;
-      });
-      if (app.Execute(args) == 1)
-      {
-        if (showLogo)
-        {
-          Console.WriteLine();
-          Console.WriteLine(@"/\_/\  wolf");
-          Console.WriteLine(@"|` ´|");
-          Console.WriteLine(@" \-/   markdown to static blog post generator");
-          Console.WriteLine();
-        }
-        if (config.Verbose)
-        {
-          Console.WriteLine("input directory      : " + config.InputDirectory);
-          Console.WriteLine("output directory     : " + config.OutputDirectory);
-          Console.WriteLine("index directory      : " + config.IndexDirectory);
-          Console.WriteLine("image prefix         : " + config.ImagePrefix);
-          Console.WriteLine("generate 'posts.json': " + config.GenerateIndex);
-          Console.WriteLine("generate 'tags.json' : " + config.GenerateTagsFile);
-        }
-        var converter = new Converter(config);
-        converter.Run();
-        Console.WriteLine("DONE");
-        Console.WriteLine();
-      }
+      return Run(config, showLogo: !parseResult.GetValue(noLogo));
+    });
+    return root.Parse(args).Invoke();
+  }
+
+  private static int Run(Config config, bool showLogo)
+  {
+    if (showLogo)
+    {
+      Console.WriteLine();
+      Console.WriteLine(@"/\_/\  wolf");
+      Console.WriteLine(@"|` ´|");
+      Console.WriteLine(@" \-/   markdown to static blog post generator");
+      Console.WriteLine();
     }
+    if (config.Verbose)
+    {
+      Console.WriteLine("input directory      : " + config.InputDirectory);
+      Console.WriteLine("output directory     : " + config.OutputDirectory);
+      Console.WriteLine("index directory      : " + config.IndexDirectory);
+      Console.WriteLine("image prefix         : " + config.ImagePrefix);
+      Console.WriteLine("generate 'posts.json': " + config.GenerateIndex);
+      Console.WriteLine("generate 'tags.json' : " + config.GenerateTagsFile);
+    }
+    var result = new Converter(config).Run();
+    var errors = result.Errors.Count();
+    Console.WriteLine(errors == 0 ? "DONE" : $"FAILED ({errors} error(s))");
+    Console.WriteLine();
+    return errors == 0 ? 0 : 1;
   }
 }

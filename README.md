@@ -34,15 +34,21 @@ names* in your project. These are the command line options to change the default
 Usage: wolf [options]
 
 Options:
-  -i | --inputDirectory <directory>   Input directory of blog posts
-  -o | --outputDirectory <directory>  Output directory of blog posts
-  -x | --indexDirectory <directory>   Directory where index (posts.json) file is written
-  -p | --imagePrefix <prefix>         Prefix added to image paths.
-  -t | --tagFile                      Generate 'tags.json' file.
-  -v | --verbose                      Show detailed output.
-  -n | --nologo                       Do not display logo.
-  -? | -h | --help                    Show help information
+  -i, --inputDirectory <directory>   Input directory of blog posts [default: posts]
+  -o, --outputDirectory <directory>  Output directory of blog posts (default: input directory)
+  -nx, --noIndex                     Do not generate index (posts.json)
+  -x, --indexDirectory <directory>   Directory where index (posts.json) file is written (default: output directory)
+  -p, --imagePrefix <prefix>         Prefix added to image paths (default: /<output directory>/)
+  -t, --tagFile                      Generate 'tags.json' file
+  -v, --verbose                      Show detailed output
+  -n, --nologo                       Do not display logo
+  -?, -h, --help                     Show help and usage information
+  --version                          Show version information
 ```
+
+*wolf* exits with a non-zero code if any post fails to convert. In that case
+`posts.json` is left untouched, so a broken post can't silently disappear
+from the index.
 
 So this is how the **posts** folder looks *before* running the *wolf* conversion.
 
