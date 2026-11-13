@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 11.0.x
+      # HangDump kills a hung test run after 5 min instead of blocking the job.
+      - run: dotnet test --solution wolf.sln --hangdump --hangdump-timeout 5m
+
+  # Publishes to NuGet whenever <VersionPrefix> in wolf.csproj names a
+  # version that isn't on nuget.org yet. Bump the version to release.
+  publish:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write  # NuGet Trusted Publishing (OIDC), no stored API key
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 11.0.x
+      - name: Check whether this version is already published
+        id: version
+        run: |
+          version=$(dotnet msbuild wolf.csproj -getProperty:Version)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if curl -sf "https://api.nuget.org/v3-flatcontainer/wolf/index.json" | jq -e --arg v "$version" '.versions | index($v)' > /dev/null; then
+            echo "wolf $version is already on NuGet, nothing to publish."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.version.outputs.publish == 'true'
+        run: dotnet pack wolf.csproj -c Release -o out
+      - if: steps.version.outputs.publish == 'true'
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: zico
+      - if: steps.version.outputs.publish == 'true'
+        run: dotnet nuget push "out/wolf.${{ steps.version.outputs.version }}.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json

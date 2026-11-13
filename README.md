@@ -1,6 +1,6 @@
 # wolf
 
-[![Build status](https://ci.appveyor.com/api/projects/status/gsn9ig1v1mccg976?svg=true)](https://ci.appveyor.com/project/z1c0/wolf)
+[![CI](https://github.com/z1c0/wolf/actions/workflows/ci.yml/badge.svg)](https://github.com/z1c0/wolf/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/wolf.svg)](https://www.nuget.org/packages/wolf/)
 
 ```
@@ -161,3 +161,10 @@ compares the result with `wolf.Tests/Expected`, which catches unintended output
 changes (e.g. from a Markdig update). After an intended change, regenerate the
 expected files with `WOLF_UPDATE_EXPECTED=1 dotnet test --solution wolf.sln`
 and review the diff.
+
+## Releasing
+
+GitHub Actions (`.github/workflows/ci.yml`) runs the tests on every push and pull
+request. On `main` it also publishes to NuGet when `<VersionPrefix>` in
+`wolf.csproj` is a version that isn't on nuget.org yet, so bumping the version is
+the release. Publishing uses NuGet Trusted Publishing (no API key in the repo).

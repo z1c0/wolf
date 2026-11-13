@@ -13,6 +13,10 @@
     <OutputType>Exe</OutputType>
     <PackageId>wolf</PackageId>
     <PackageProjectUrl>https://github.com/z1c0/wolf</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/z1c0/wolf</RepositoryUrl>
+    <Description>Markdown to static blog post generator: converts a folder of Markdown posts to HTML plus a posts.json index.</Description>
+    <PackageTags>markdown;blog;static-site;html</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
